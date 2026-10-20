@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Seriálový kvíz</title>
+<style>
+:root{--bg:#f4f5fb;--card:#fff;--tx:#1b1d2a;--mut:#6b7085;--bd:#dfe2ee;--ac:#5b5bf0;--ok:#1f9d55;--ko:#d93a3a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12131c;--card:#1d1f2e;--tx:#eef0fa;--mut:#9aa0b8;--bd:#32354a;--ac:#8080ff;--ok:#3ecf7b;--ko:#ff6b6b;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12131c;--card:#1d1f2e;--tx:#eef0fa;--mut:#9aa0b8;--bd:#32354a;--ac:#8080ff;--ok:#3ecf7b;--ko:#ff6b6b;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh}
+main{max-width:640px;margin:0 auto;padding:24px 16px}
+h1{text-align:center;margin:8px 0 4px;font-size:2rem}
+.sub{text-align:center;color:var(--mut);margin:0 0 24px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.show{background:var(--card);border:2px solid var(--bd);border-radius:16px;padding:20px 10px;text-align:center;cursor:pointer;font:inherit;color:inherit;transition:transform .15s,border-color .15s}
+.show:hover{transform:translateY(-3px);border-color:var(--c)}
+.show .e{font-size:2.6rem;display:block}
+.show b{display:block;margin-top:6px;font-size:1.1rem}
+.show small{color:var(--mut)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:20px}
+.top{display:flex;justify-content:space-between;align-items:center;color:var(--mut);font-size:.9rem;margin-bottom:10px}
+.bar{height:8px;background:var(--bd);border-radius:8px;overflow:hidden;margin-bottom:18px}
+.bar i{display:block;height:100%;background:var(--ac);transition:width .3s}
+.pts{display:inline-block;background:var(--ac);color:#fff;border-radius:20px;padding:2px 12px;font-weight:700;font-size:.85rem}
+.q{font-size:1.25rem;font-weight:600;margin:10px 0 18px;line-height:1.35}
+.ans{display:block;width:100%;text-align:left;margin:8px 0;padding:14px 16px;border-radius:12px;border:2px solid var(--bd);background:transparent;color:inherit;font:inherit;cursor:pointer}
+.ans:hover:not(:disabled){border-color:var(--ac)}
+.ans.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 18%,transparent)}
+.ans.ko{border-color:var(--ko);background:color-mix(in srgb,var(--ko) 18%,transparent)}
+.btn{display:block;width:100%;margin-top:14px;padding:14px;border:0;border-radius:12px;background:var(--ac);color:#fff;font:inherit;font-weight:700;cursor:pointer}
+.btn.sec{background:transparent;color:var(--tx);border:2px solid var(--bd)}
+.big{font-size:4rem;font-weight:800;text-align:center;margin:6px 0;color:var(--ac)}
+.c{text-align:center}
+.hide{display:none}
+body{background:radial-gradient(circle at 15% 0%,color-mix(in srgb,var(--sc,#5b5bf0) 38%,transparent),transparent 55%),radial-gradient(circle at 95% 100%,color-mix(in srgb,var(--sc,#5b5bf0) 26%,transparent),transparent 50%),var(--bg);background-attachment:fixed;transition:background .4s}
+h1{font-size:2.5rem;background:linear-gradient(90deg,#f5c518,#2bb7e8,#7bc043,#e8743b);-webkit-background-clip:text;background-clip:text;color:transparent}
+.show{border-top:6px solid var(--c);box-shadow:0 6px 18px rgba(0,0,0,.12)}
+.show:hover{transform:translateY(-5px) rotate(-1deg);box-shadow:0 12px 26px color-mix(in srgb,var(--c) 45%,transparent)}
+.show .e{font-size:3.4rem;filter:drop-shadow(0 4px 4px rgba(0,0,0,.25))}
+.card{box-shadow:0 10px 30px rgba(0,0,0,.18);animation:pop .35s}
+@keyframes pop{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+.bar{height:10px}.bar i{background:linear-gradient(90deg,var(--sc,var(--ac)),var(--ac))}
+.tag{margin-left:8px;color:var(--mut);font-size:.85rem;font-weight:600}
+.clue{font-size:4rem;text-align:center;margin:10px 0;letter-spacing:8px;filter:drop-shadow(0 4px 6px rgba(0,0,0,.25))}
+.desc{background:color-mix(in srgb,var(--sc,#5b5bf0) 15%,transparent);border-left:4px solid var(--sc,#5b5bf0);padding:10px 14px;border-radius:8px;margin-bottom:14px;line-height:1.4}
+.inp{width:100%;padding:14px;border-radius:12px;border:2px solid var(--bd);background:transparent;color:inherit;font:inherit;font-size:1.1rem}
+.inp:focus{outline:none;border-color:var(--ac)}.inp.ok{border-color:var(--ok)}.inp.ko{border-color:var(--ko)}
+.shake{animation:sh .35s}@keyframes sh{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.fb{margin-top:12px;font-weight:600}
+.ans{transition:transform .1s,border-color .15s}.ans:active{transform:scale(.98)}
+.big{font-size:5rem}
+.cf{position:fixed;top:-20px;width:10px;height:14px;z-index:9;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+main{position:relative;z-index:1}
+#run{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+#run:after{content:"";position:absolute;left:0;right:0;bottom:0;height:14vh;background:linear-gradient(transparent,color-mix(in srgb,var(--ac) 25%,transparent))}
+.rn{position:absolute;left:0;will-change:transform;animation:go linear infinite;filter:drop-shadow(0 5px 4px rgba(0,0,0,.25));opacity:.9}
+.rn.l{animation-name:gol}
+.rn span{display:block;animation:hop .4s ease-in-out infinite alternate}
+@keyframes go{from{transform:translateX(-15vw)}to{transform:translateX(115vw)}}
+@keyframes gol{from{transform:translateX(115vw)}to{transform:translateX(-15vw)}}
+@keyframes hop{from{transform:translateY(0) rotate(-7deg)}to{transform:translateY(-16px) rotate(7deg)}}
+.lg{transform-box:fill-box;transform-origin:50% 0;animation:leg .3s ease-in-out infinite alternate}
+.lg.b{animation-direction:alternate-reverse}
+@keyframes leg{from{transform:rotate(-20deg)}to{transform:rotate(20deg)}}
+.wag{transform-box:fill-box;transform-origin:0 50%;animation:wag .5s ease-in-out infinite alternate}
+@keyframes wag{from{transform:rotate(-9deg)}to{transform:rotate(12deg)}}
+.bl{transform-box:fill-box;transform-origin:center;animation:bl 4.5s infinite}
+@keyframes bl{0%,92%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+.pl{transform-box:fill-box;transform-origin:center;animation:pl .8s ease-in-out infinite alternate}
+@keyframes pl{from{transform:scale(.8);opacity:.65}to{transform:scale(1.15);opacity:1}}
+.sp{transform-box:fill-box;transform-origin:center;animation:sp .6s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.bob{animation:bob .5s ease-in-out infinite alternate}.bob.b{animation-delay:-.25s}
+@keyframes bob{to{transform:translateY(-6px)}}
+@media (prefers-reduced-motion:reduce){.rn,.rn span,.lg,.wag,.bl,.pl,.sp,.bob{animation:none}}
+</style>
+</head>
+<body>
+<div id="run" aria-hidden="true"></div>
+<main>
+<section id="home">
+  <h1>📺 Seriálový kvíz</h1>
+  <p class="sub">Vyber seriál, odpověz na 10 náhodných otázek a zjisti, kolik % bodů získáš.</p>
+  <div class="grid" id="grid"></div>
+</section>
+<section id="quiz" class="hide"></section>
+<section id="res" class="hide card"></section>
+</main>
+<script>
+// [body, otázka, správná odpověď, špatné...]
+const D={
+simpsonovi:{n:"Simpsonovi",e:"🍩",c:"#f5c518",q:[
+[3,"Jak se jmenuje Homerova manželka?","Marge","Lisa","Patty","Selma"],
+[3,"Jak se jmenuje Bartův nejlepší kamarád?","Milhouse","Nelson","Ralph","Martin"],
+[3,"V jakém městě Simpsonovi žijí?","Springfield","Shelbyville","Capital City","Ogdenville"],
+[3,"Na jaký nástroj hraje Lisa?","Saxofon","Trubka","Klarinet","Housle"],
+[3,"Kolik prstů mají Simpsonovi na jedné ruce?","4","3","5","6"],
+[4,"Jak se jmenuje majitel jaderné elektrárny?","Montgomery Burns","Waylon Smithers","Seymour Skinner","Moe Szyslak"],
+[4,"Kdo vlastní večerku Kwik-E-Mart?","Apu","Moe","Krusty","Otto"],
+[4,"Jak se jmenuje ředitel springfieldské základní školy?","Seymour Skinner","Gary Chalmers","Ned Flanders","Willie"],
+[4,"Jaké pivo pije Homer nejraději?","Duff","Buzz","Fudd","Tuborg"],
+[4,"Jak se jmenuje pes Simpsonových?","Santa’s Little Helper","Brian","Scooby","Odie"],
+[5,"Jaké je Homerovo druhé jméno?","Jay","Joseph","John","James"],
+[5,"Kdo je Bartův úhlavní nepřítel, který se ho opakovaně snaží zabít?","Sideshow Bob","Snake","Nelson","Jimbo"],
+[5,"Kdo je Bartův oblíbený komiksový hrdina?","Radioactive Man","Batman","Superman","Itchy"],
+[6,"Jak se jmenovala zemřelá manželka Neda Flanderse?","Maude","Edna","Helen","Agnes"],
+[6,"Jaké příjmení měla Marge za svobodna?","Bouvierová","Van Houtenová","Gumbleová","Hibbertová"],
+[7,"Jaké je skutečné jméno klauna Krustyho?","Herschel Krustofski","Hans Moleman","Rainier Wolfcastle","Seymour Krusty"],
+[7,"Jak se jmenuje Homerův nevlastní bratr, který vlastní automobilku?","Herbert Powell","Abe Simpson","Cletus","Gil"]]},
+futurama:{n:"Futurama",e:"🚀",c:"#2bb7e8",q:[
+[3,"Jak se jmenuje hlavní hrdina seriálu?","Fry","Hermes","Zoidberg","Kif"],
+[3,"Kolik očí má Leela?","1","2","3","4"],
+[3,"Jak se jmenuje alkoholický robot?","Bender","Calculon","Roberto","Flexo"],
+[3,"Jak se jmenuje firma, ve které Fry pracuje?","Planet Express","Slurm Co.","Omicron","Robot Arms"],
+[4,"V jakém roce byl Fry zmražen?","1999","2000","1989","2001"],
+[4,"Jak se jmenuje stařičký profesor, majitel Planet Express?","Hubert Farnsworth","Hermes Conrad","Zapp Brannigan","Kif Kroker"],
+[4,"Jak se jmenuje oblíbený nápoj ve Futuramě?","Slurm","Duff","Buzz Cola","Nuka"],
+[4,"Co pohání Bendera jako palivo?","Alkohol","Elektřina","Benzín","Jaderný odpad"],
+[5,"Jak se jmenoval Fryho pes?","Seymour","Nibbler","Brian","Spot"],
+[5,"Z jaké země pochází byrokrat Hermes?","Jamajka","Kuba","Brazílie","Nigérie"],
+[5,"Z jaké planety pochází Amy Wong?","Mars","Venuše","Jupiter","Země"],
+[5,"Jak se jmenuje Leelin domácí mazlíček?","Nibbler","Seymour","Scruffy","Elzar"],
+[6,"Jaké je Leelino příjmení?","Turanga","Wong","Conrad","Farnsworth"],
+[6,"Kdo je pobočník kapitána Zappa Branniganna?","Kif Kroker","Lrrr","Morbo","Hedonismbot"],
+[7,"Z jaké rasy pochází Nibbler?","Nibblonian","Decapodian","Omicronian","Neptunian"],
+[7,"Jak se jmenuje Fryho bratr?","Yancy","Philip","Harold","Cubert"]]},
+family:{n:"Family Guy",e:"🍺",c:"#7bc043",q:[
+[3,"Jak se jmenuje otec rodiny Griffinových?","Peter","Joe","Glenn","Cleveland"],
+[3,"Jak se jmenuje mluvící pes Griffinových?","Brian","Rex","Santa","Odie"],
+[3,"Jak se jmenuje nejmladší člen rodiny, génius s plány na dobytí světa?","Stewie","Chris","Meg","Neil"],
+[3,"Jak se jmenuje město, kde Griffinovi žijí?","Quahog","Springfield","South Park","Langley Falls"],
+[4,"Jak se jmenuje Peterova manželka?","Lois","Marge","Meg","Bonnie"],
+[4,"Který soused je policista na vozíku?","Joe Swanson","Cleveland","Glenn Quagmire","Herbert"],
+[4,"Který soused je známý hláškou „Giggity“?","Quagmire","Joe","Cleveland","Mort"],
+[4,"Jak se jmenuje dcera Griffinových?","Meg","Lois","Lisa","Susie"],
+[5,"Jak se jmenuje Stewieho plyšový medvídek?","Rupert","Teddy","Fozzie","Bruno"],
+[5,"Jak se jmenuje hospoda, kam chodí Peter s kamarády?","The Drunken Clam","Moe’s Tavern","Cheers","The Rusty Anchor"],
+[5,"Ve kterém státě USA leží Quahog?","Rhode Island","Texas","Kalifornie","Maine"],
+[5,"Čím chce být Brian?","Spisovatelem","Hercem","Malířem","Policistou"],
+[6,"Jaké příjmení měla Lois za svobodna?","Pewterschmidt","Swanson","Quagmire","Brown"],
+[6,"Jaké je Quagmireovo křestní jméno?","Glenn","Gary","Greg","Gordon"],
+[6,"Jak zní celé Stewieho jméno?","Stewart Gilligan Griffin","Stewart Peter Griffin","Steven Gilligan Griffin","Stewart Brian Griffin"],
+[7,"Jak se jmenuje obří kuře, Peterův úhlavní nepřítel?","Ernie","Clucky","Bob","Frank"],
+[7,"Jak se jmenuje pivovar, kde Peter pracuje?","Pawtucket Brewery","Duff Brewery","Quahog Beer","Griffin Lager"]]},
+southpark:{n:"South Park",e:"❄️",c:"#e8743b",q:[
+[3,"Který kluk ze South Parku v klasických sezónách téměř v každém díle umírá?","Kenny","Kyle","Butters","Token"],
+[3,"Jak se jmenuje tlustý kluk, který se stále hádá s Kylem?","Eric Cartman","Stan","Butters","Jimmy"],
+[3,"Jak se jmenuje židovský kluk ze čtveřice kamarádů?","Kyle","Stan","Kenny","Craig"],
+[3,"Jak se jmenuje mluvící ručník?","Towelie","Mr. Hat","Ike","Sparky"],
+[4,"Ve kterém americkém státě leží South Park?","Colorado","Texas","Nevada","Oregon"],
+[4,"Kdo je Vánoční hovínko?","Mr. Hankey","Mr. Mackey","Mr. Hat","Mr. Slave"],
+[4,"Který školní poradce často říká „m’kay“?","Mr. Mackey","Mr. Garrison","Chef","Principal Victoria"],
+[5,"Jak se jmenuje Stanův pes?","Sparky","Brian","Rex","Spot"],
+[5,"Jak se jmenuje Cartmanova oblíbená pochoutka?","Cheesy Poofs","Nachos","Popcorn","Pop-Tarts"],
+[5,"Jakou maňásku používá pan Garrison?","Mr. Hat","Mr. Hankey","Mr. Slave","Mr. Puppet"],
+[5,"Jaké je Kennyho příjmení?","McCormick","Stotch","Broflovski","Marsh"],
+[5,"Jak se jmenuje Kyleův mladší adoptovaný bratr?","Ike","Randy","Butters","Tweek"],
+[5,"Z jaké země pocházejí Terrance a Phillip?","Kanada","USA","Anglie","Austrálie"],
+[6,"Jak se celým jménem jmenuje Butters?","Leopold Stotch","Leonard Stotch","Lawrence Stotch","Lionel Marsh"],
+[6,"Jak se jmenuje Cartmanova matka?","Liane","Sharon","Sheila","Linda"],
+[7,"V kterém roce se začal South Park vysílat?","1997","1995","1999","2001"]]}
+};
+const $=id=>document.getElementById(id);
+const shuf=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+let key,qs,i,score,total,done;
+
+$("grid").innerHTML=Object.entries(D).map(([k,s])=>`<button class="show" style="--c:${s.c}" data-k="${k}"><span class="e">${s.e}</span><b>${s.n}</b><small>${s.q.length} otázek v bance</small></button>`).join("");
+$("grid").onclick=e=>{const b=e.target.closest(".show");if(b)start(b.dataset.k)};
+
+function show(id){["home","quiz","res"].forEach(x=>$(x).classList.toggle("hide",x!==id))}
+
+function start(k){
+  key=k;
+  qs=shuf(D[k].q).slice(0,10).map(r=>({p:r[0],t:r[1],c:r[2],a:shuf(r.slice(2))}));
+  total=qs.reduce((s,q)=>s+q.p,0);score=0;i=0;
+  show("quiz");ask();
+}
+
+function ask(){
+  done=false;const q=qs[i];
+  $("quiz").innerHTML=`<div class="card">
+    <div class="top"><span>${D[key].e} ${D[key].n} · otázka ${i+1}/10</span><span>Body: ${score}</span></div>
+    <div class="bar"><i style="width:${i*10}%"></i></div>
+    <span class="pts">${q.p} ${q.p<5?"body":"bodů"}</span>
+    <div class="q">${q.t}</div>
+    <div id="ans">${q.a.map((a,n)=>`<button class="ans" data-n="${n}">${a}</button>`).join("")}</div>
+    <button class="btn hide" id="next">${i<9?"Další otázka →":"Zobrazit výsledek"}</button>
+  </div>`;
+  $("ans").onclick=pick;
+  $("next").onclick=()=>{i++;i<10?ask():finish()};
+}
+
+function pick(e){
+  const b=e.target.closest(".ans");if(!b||done)return;
+  done=true;const q=qs[i];
+  [...document.querySelectorAll(".ans")].forEach(x=>{
+    x.disabled=true;
+    if(x.textContent===q.c)x.classList.add("ok");
+  });
+  if(b.textContent===q.c)score+=q.p;else b.classList.add("ko");
+  $("next").classList.remove("hide");
+}
+
+function finish(){
+  const pct=Math.round(score/total*100);
+  const msg=pct>=90?"Absolutní mistr! 🏆":pct>=70?"Skvělý fanoušek! 🎉":pct>=50?"Dobrá práce, ale ještě je co objevovat. 📺":pct>=30?"Chce to víc koukat! 🍿":"Čas na maraton seriálu! 😅";
+  $("res").innerHTML=`<div class="c"><div>${D[key].e} ${D[key].n}</div>
+    <div class="big">${pct} %</div>
+    <p>Získal jsi <b>${score}</b> z <b>${total}</b> možných bodů.</p>
+    <p>${msg}</p></div>
+    <button class="btn" id="again">Zkusit znovu</button>
+    <button class="btn sec" id="menu">Vybrat jiný seriál</button>`;
+  show("res");
+  $("again").onclick=()=>start(key);
+  $("menu").onclick=()=>show("home");
+}
+</script>
+<script>
+// [body, emoji, popis, správně, špatné...] – „Co je tohle za postavu?“
+D.simpsonovi.w=[
+[3,"🍩🍺👨","Žlutý plešatý otec rodiny, pracuje v jaderné elektrárně a miluje donuty.","Homer","Bart","Moe","Ned Flanders"],
+[3,"🛹😈","Desetiletý rošťák se špičatými vlasy a prakem.","Bart","Milhouse","Ralph","Nelson"],
+[4,"🎷📚","Osmiletá premiantka, která hraje na saxofon.","Lisa","Maggie","Marge","Edna"],
+[4,"🍻🥃","Zachmuřený majitel hospody, do které chodí Homer.","Moe","Barney","Lenny","Carl"],
+[5,"🧓💰🏭","Skrblický stařec, majitel elektrárny, který rád pronáší „Výborně“.","Montgomery Burns","Smithers","Skinner","Abe Simpson"],
+[3,"🤡🎪","Televizní klaun se zelenými vlasy a pořadem pro děti.","Krusty","Sideshow Bob","Apu","Otto"]];
+// [body, emoji, popis, jméno, [přijímané varianty]] – „Napiš jméno postavy“
+D.simpsonovi.t=[
+[4,"🍩🍺","Žlutý plešatý otec rodiny, který pracuje v jaderné elektrárně.","Homer",["homer simpson"]],
+[5,"🤡🎪","Televizní klaun se zelenými vlasy a pořadem pro děti.","Krusty",["krusty klaun","krusty the clown"]],
+[5,"🙏👋","Soused Simpsonových, který zdraví „Hi-diddly-ho“.","Ned Flanders",["ned","flanders"]],
+[7,"🐶🎄","Chrt Simpsonových, jehož jméno souvisí s Vánoci.","Santa’s Little Helper",["santa","santuv maly pomocnik"]]];
+D.futurama.w=[
+[3,"🍺🤖","Robot, který pije, kouří doutníky a krade.","Bender","Flexo","Calculon","Roberto"],
+[3,"👁️🚀","Kapitánka lodi s jedním okem a fialovými vlasy.","Leela","Amy","Mom","Fry"],
+[4,"🦞🩺","Chudý doktor podobný humrovi.","Zoidberg","Nibbler","Kif","Hermes"],
+[5,"👴🧪","Stařičký vynálezce a majitel Planet Express.","Farnsworth","Hermes","Zapp","Morbo"],
+[6,"🪖😏","Domýšlivý kapitán, který neustále svádí Leelu.","Zapp Brannigan","Kif Kroker","Lrrr","Hedonismbot"]];
+D.futurama.t=[
+[4,"🍕🧊","Poslíček pizzy zmražený na tisíc let.","Fry",["philip fry","philip j fry"]],
+[4,"👁️💜","Kapitánka lodi s jedním okem a fialovými vlasy.","Leela",["turanga leela"]],
+[5,"🧮🇯🇲","Jamajský byrokrat, účetní Planet Express.","Hermes",["hermes conrad"]],
+[6,"🤖🎭","Robot a herec z telenovel.","Calculon",[]]];
+D.family.w=[
+[3,"🍺🧔","Tlustý otec rodiny, který se hlučně směje.","Peter","Joe","Cleveland","Quagmire"],
+[3,"🐕🍸","Mluvící pes, který pije martini a píše román.","Brian","Rex","Stewie","Rupert"],
+[3,"👶🔫","Génius batole, které chce ovládnout svět.","Stewie","Chris","Brian","Neil"],
+[4,"👓👧","Teenagerka, kterou všichni šikanují.","Meg","Lois","Bonnie","Susie"],
+[5,"♿👮","Soused na vozíku, který pracuje jako policista.","Joe","Cleveland","Herbert","Mort"],
+[6,"✈️😏","Soused-pilot s hláškou „Giggity“.","Quagmire","Joe","Cleveland","Tom Tucker"]];
+D.family.t=[
+[3,"👶🏈","Batole s hlavou ve tvaru fotbalového míče a britským přízvukem.","Stewie",["stewie griffin"]],
+[3,"🐕🍸","Mluvící pes, který pije martini.","Brian",["brian griffin"]],
+[5,"🧸","Plyšový medvídek, kterého Stewie nosí všude s sebou.","Rupert",[]],
+[7,"🐔🥊","Obří kuře, které se pravidelně pere s Peterem.","Ernie",["ernie the giant chicken","obri kure"]]];
+D.southpark.w=[
+[3,"🟠🧥","Kluk v oranžové bundě, jehož obličej není vidět.","Kenny","Kyle","Stan","Butters"],
+[3,"🍔😈","Tlustý, sobecký kluk.","Cartman","Butters","Token","Jimmy"],
+[3,"🟢🧢","Židovský kluk v zelené čepici.","Kyle","Stan","Craig","Tweek"],
+[4,"💩🎄","Mluvící vánoční hovínko.","Mr. Hankey","Mr. Garrison","Mr. Hat","Towelie"],
+[5,"🧤🎩","Učitel s maňáskem na ruce.","Mr. Garrison","Mr. Mackey","Chef","Principal Victoria"],
+[6,"😇🐣","Naivní kluk, který je stále trestán a občas se změní v „Professor Chaos“.","Butters","Tweek","Kenny","Ike"]];
+D.southpark.t=[
+[3,"🔵🧢","Kluk v modré čepici s bambulí, kamarád Kylea.","Stan",["stan marsh"]],
+[4,"🍔🍟","Tlustý, sobecký kluk, který pořád křičí „Respect my authoritah!“.","Cartman",["eric cartman"]],
+[5,"🧼🧻","Mluvící ručník, který rád kouří trávu.","Towelie",["rucnik"]],
+[6,"💩🎅","Mluvící vánoční hovínko.","Mr. Hankey",["hankey","vanocni hovinko"]]];
+
+const norm=s=>s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();
+const root=document.documentElement;
+const oldShow=show;
+show=function(id){if(id==="home")root.style.removeProperty("--sc");oldShow(id)};
+
+start=function(k){
+  key=k;root.style.setProperty("--sc",D[k].c);const s=D[k];
+  const mk=(r,t)=>t==="q"?{k:"q",p:r[0],t:r[1],c:r[2],a:shuf(r.slice(2))}:t==="w"?{k:"w",p:r[0],e:r[1],d:r[2],c:r[3],a:shuf(r.slice(3))}:{k:"t",p:r[0],e:r[1],d:r[2],c:r[3],al:[r[3],...r[4]]};
+  qs=shuf([...shuf(s.q).slice(0,5).map(r=>mk(r,"q")),...shuf(s.w).slice(0,3).map(r=>mk(r,"w")),...shuf(s.t).slice(0,2).map(r=>mk(r,"t"))]);
+  total=qs.reduce((a,q)=>a+q.p,0);score=0;i=0;show("quiz");ask();
+};
+
+ask=function(){
+  done=false;const q=qs[i];
+  const lab={q:"Kvízová otázka",w:"Co je tohle za postavu?",t:"✍️ Napiš jméno postavy"}[q.k];
+  const col=q.p>=6?"#d93a3a":q.p>=4?"#e8a317":"#1f9d55";
+  $("quiz").innerHTML=`<div class="card">
+    <div class="top"><span>${D[key].e} ${D[key].n} · ${i+1}/10</span><span>⭐ ${score}</span></div>
+    <div class="bar"><i style="width:${i*10}%"></i></div>
+    <span class="pts" style="background:${col}">${q.p} b.</span><span class="tag">${lab}</span>
+    ${q.e?`<div class="clue">${q.e}</div><div class="desc">${q.d}</div>`:`<div class="q">${q.t}</div>`}
+    ${q.k==="t"?`<input class="inp" id="inp" placeholder="Napiš jméno…" autocomplete="off"><button class="btn" id="ok">Odpovědět</button>`:`<div id="ans">${q.a.map(a=>`<button class="ans">${a}</button>`).join("")}</div>`}
+    <div class="fb" id="fb"></div>
+    <button class="btn hide" id="next">${i<9?"Další otázka →":"Zobrazit výsledek"}</button></div>`;
+  $("next").onclick=()=>{i++;i<10?ask():finish()};
+  if(q.k==="t"){$("ok").onclick=check;$("inp").onkeydown=e=>{if(e.key==="Enter")check()};$("inp").focus()}
+  else $("ans").onclick=pick;
+};
+
+pick=function(e){
+  const b=e.target.closest(".ans");if(!b||done)return;
+  done=true;const q=qs[i],good=b.textContent===q.c;
+  document.querySelectorAll(".ans").forEach(x=>{x.disabled=true;if(x.textContent===q.c)x.classList.add("ok")});
+  if(good)score+=q.p;else b.classList.add("ko","shake");
+  $("fb").textContent=good?"✅ Správně! +"+q.p:"❌ Špatně";
+  $("next").classList.remove("hide");
+};
+
+function check(){
+  const q=qs[i],inp=$("inp"),v=norm(inp.value);
+  if(done||!v)return;
+  done=true;const good=q.al.some(a=>norm(a)===v);
+  inp.disabled=true;inp.classList.add(good?"ok":"ko");
+  if(good)score+=q.p;else inp.classList.add("shake");
+  $("fb").textContent=good?"✅ Správně! +"+q.p:"❌ Správná odpověď: "+q.c;
+  $("ok").classList.add("hide");$("next").classList.remove("hide");
+}
+
+function confetti(){for(let n=0;n<45;n++){const c=document.createElement("i");c.className="cf";c.style.cssText=`left:${Math.random()*100}vw;background:hsl(${Math.random()*360},85%,60%);animation-duration:${2+Math.random()*2}s;animation-delay:${Math.random()}s`;document.body.appendChild(c);setTimeout(()=>c.remove(),5000)}}
+const oldFinish=finish;
+finish=function(){oldFinish();if(Math.round(score/total*100)>=70)confetti()};
+(function(){
+  // 12 původních postaviček nakreslených v SVG (žádné nejsou ze seriálů)
+  const S=(body,sh=135,w=30)=>`<svg viewBox="0 0 120 140" style="display:block;width:100%;height:auto;overflow:visible" xmlns="http://www.w3.org/2000/svg"><ellipse cx="60" cy="${sh}" rx="${w}" ry="5" fill="#000" opacity=".18"/>${body}</svg>`;
+  const eye=(x,y,r=6,c="#1b1d2a")=>`<g class="bl"><ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r*1.15}" fill="#fff" stroke="#1b1d2a" stroke-width="1.4"/><circle cx="${x+1}" cy="${y+1}" r="${r*.6}" fill="${c}"/><circle cx="${x+r*.15}" cy="${y-r*.15}" r="${r*.24}" fill="#fff"/></g>`;
+  const chk=(x,y,rx=5)=>`<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${rx*.6}" fill="#ff6f91" opacity=".55"/>`;
+  const lg=(x,y,w,h,c,b)=>`<rect class="lg${b?" b":""}" x="${x}" y="${y}" width="${w}" height="${h}" rx="${w/2}" fill="${c}"/>`;
+  const star=(cx,cy,R,r)=>Array.from({length:10},(_,k)=>{const a=(-90+k*36)*Math.PI/180,q=k%2?r:R;return (cx+q*Math.cos(a)).toFixed(1)+","+(cy+q*Math.sin(a)).toFixed(1)}).join(" ");
+  const C=[
+  // 0 Bublinka – oblačná holčička s hvězdičkou na anténce
+  u=>S(`<defs><linearGradient id="a${u}" gradientUnits="userSpaceOnUse" x1="0" y1="40" x2="0" y2="118"><stop offset="0" stop-color="#fff1ff"/><stop offset=".5" stop-color="#f0b3ff"/><stop offset="1" stop-color="#b979f0"/></linearGradient></defs>
+    ${lg(42,112,10,18,"#8a4fd8")}${lg(68,112,10,18,"#8a4fd8",1)}
+    <ellipse cx="46" cy="130" rx="9" ry="4" fill="#6d34b8"/><ellipse cx="72" cy="130" rx="9" ry="4" fill="#6d34b8"/>
+    <line x1="60" y1="46" x2="60" y2="30" stroke="#8a4fd8" stroke-width="3" stroke-linecap="round"/>
+    <polygon class="pl" points="${star(60,20,11,5)}" fill="#ffd23f" stroke="#e8a317" stroke-width="1.5" stroke-linejoin="round"/>
+    <g fill="url(#a${u})" stroke="#a45fe0" stroke-width="1.5"><circle cx="60" cy="82" r="34"/><circle cx="34" cy="90" r="21"/><circle cx="86" cy="90" r="21"/><circle cx="44" cy="62" r="20"/><circle cx="76" cy="62" r="20"/></g>
+    <g fill="url(#a${u})"><circle cx="60" cy="82" r="33"/><circle cx="34" cy="90" r="20"/><circle cx="86" cy="90" r="20"/><circle cx="44" cy="62" r="19"/><circle cx="76" cy="62" r="19"/></g>
+    <ellipse cx="42" cy="58" rx="9" ry="5" fill="#fff" opacity=".55" transform="rotate(-30 42 58)"/>
+    <circle cx="26" cy="76" r="2.5" fill="#ff6f91"/><circle cx="92" cy="80" r="2.5" fill="#5bd1f0"/><circle cx="70" cy="50" r="2.5" fill="#ffd23f"/><circle cx="30" cy="100" r="2.5" fill="#5bd1f0"/>
+    ${eye(50,84)}${eye(70,84)}${chk(41,94)}${chk(79,94)}
+    <path d="M52 95 Q60 103 68 95" fill="none" stroke="#5a2a8a" stroke-width="2.5" stroke-linecap="round"/>`),
+  // 1 Mechoň – chlupatý tříoký příšerák s růžky
+  u=>S(`<defs><radialGradient id="a${u}" cx=".4" cy=".3" r=".8"><stop offset="0" stop-color="#6df0df"/><stop offset="1" stop-color="#0e8f86"/></radialGradient></defs>
+    <ellipse class="lg" cx="46" cy="128" rx="11" ry="6" fill="#ff9f1c"/><ellipse class="lg b" cx="74" cy="128" rx="11" ry="6" fill="#ff9f1c"/>
+    <ellipse class="lg" cx="20" cy="90" rx="7" ry="13" fill="#17a99c" transform="rotate(20 20 90)"/><ellipse class="lg b" cx="100" cy="90" rx="7" ry="13" fill="#17a99c" transform="rotate(-20 100 90)"/>
+    ${Array.from({length:18},(_,k)=>{const a=k*20*Math.PI/180;return `<circle cx="${(60+34*Math.cos(a)).toFixed(1)}" cy="${(84+38*Math.sin(a)).toFixed(1)}" r="9" fill="#17a99c"/>`}).join("")}
+    <ellipse cx="60" cy="84" rx="37" ry="40" fill="url(#a${u})"/>
+    <polygon points="40,52 33,28 52,44" fill="#ffe066" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/><polygon points="80,52 87,28 68,44" fill="#ffe066" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/>
+    <ellipse cx="60" cy="108" rx="20" ry="14" fill="#fff" opacity=".28"/>
+    ${eye(60,68,9,"#7a1fa2")}${eye(41,76,6,"#7a1fa2")}${eye(79,76,6,"#7a1fa2")}
+    <path d="M42 94 Q60 112 78 94 Q60 100 42 94Z" fill="#5a1230" stroke="#3a0a20" stroke-width="1.5"/>
+    <polygon points="48,96 53,96 50.5,102" fill="#fff"/><polygon points="58,98 64,98 61,104" fill="#fff"/><polygon points="68,96 73,96 70.5,102" fill="#fff"/>
+    ${chk(34,90,4)}${chk(86,90,4)}`),
+  // 2 Toastík – toastovací robot na kolečkách
+  u=>S(`<defs><linearGradient id="a${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f7fd"/><stop offset=".6" stop-color="#b7c1d6"/><stop offset="1" stop-color="#8e9ab3"/></linearGradient></defs>
+    <path d="M22 102 Q6 104 8 122" fill="none" stroke="#2b2f42" stroke-width="3"/><rect x="3" y="120" width="10" height="8" rx="2" fill="#ffd23f" stroke="#2b2f42" stroke-width="1.5"/>
+    <rect class="bob" x="34" y="36" width="20" height="26" rx="6" fill="#e9b872" stroke="#b97a30" stroke-width="2"/><rect class="bob b" x="66" y="42" width="20" height="22" rx="6" fill="#d9a05a" stroke="#b97a30" stroke-width="2"/>
+    <rect x="22" y="56" width="76" height="58" rx="14" fill="url(#a${u})" stroke="#6b768f" stroke-width="2"/>
+    <rect x="30" y="52" width="28" height="9" rx="4" fill="#2b2f42"/><rect x="62" y="52" width="28" height="9" rx="4" fill="#2b2f42"/>
+    <path d="M30 68 H88" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".7"/>
+    ${eye(44,84,9,"#2b2f42")}${eye(76,84,9,"#2b2f42")}
+    <rect x="46" y="98" width="28" height="9" rx="4.5" fill="#2b2f42"/><path d="M53 98V107M60 98V107M67 98V107" stroke="#fff" stroke-width="1.5" opacity=".8"/>
+    <rect x="98" y="72" width="9" height="22" rx="3" fill="#ff5a5f" stroke="#b8323a" stroke-width="1.5"/><circle cx="102.5" cy="72" r="5" fill="#ff8a8e" stroke="#b8323a" stroke-width="1.5"/>
+    <circle cx="30" cy="104" r="2" fill="#3ecf7b"/><circle cx="90" cy="104" r="2" fill="#ffd23f"/>
+    <g transform="translate(38 122)"><circle r="11" fill="#2b2f42"/><g class="sp"><circle r="4" fill="#aab4cc"/><path d="M-8 0H8M0-8V8" stroke="#aab4cc" stroke-width="2"/></g></g>
+    <g transform="translate(82 122)"><circle r="11" fill="#2b2f42"/><g class="sp"><circle r="4" fill="#aab4cc"/><path d="M-8 0H8M0-8V8" stroke="#aab4cc" stroke-width="2"/></g></g>`),
+  // 3 Liška kosmonautka
+  u=>S(`<defs><radialGradient id="a${u}" cx=".4" cy=".3" r=".8"><stop offset="0" stop-color="#ffb065"/><stop offset="1" stop-color="#f0701a"/></radialGradient></defs>
+    <g class="wag"><path d="M82 104 Q120 106 110 62 Q104 86 80 90Z" fill="#ff8a2b" stroke="#c25a10" stroke-width="1.5"/><path d="M110 62 Q108 74 103 80 Q112 82 114 70Z" fill="#fff"/></g>
+    ${lg(43,114,13,18,"#5b5bf0")}${lg(64,114,13,18,"#5b5bf0",1)}
+    <rect x="38" y="82" width="44" height="40" rx="16" fill="#f4f6ff" stroke="#b9c0e0" stroke-width="2"/><rect x="38" y="104" width="44" height="7" fill="#5b5bf0" opacity=".85"/>
+    <rect x="50" y="90" width="20" height="9" rx="3" fill="#dfe3f5"/><circle cx="56" cy="94.5" r="2.4" fill="#ff5a5f"/><circle cx="64" cy="94.5" r="2.4" fill="#3ecf7b"/>
+    <ellipse class="lg" cx="34" cy="100" rx="6" ry="11" fill="#f4f6ff" stroke="#b9c0e0" stroke-width="1.5"/><ellipse class="lg b" cx="86" cy="100" rx="6" ry="11" fill="#f4f6ff" stroke="#b9c0e0" stroke-width="1.5"/>
+    <ellipse cx="60" cy="90" rx="26" ry="6" fill="#c9cfe8" stroke="#9aa3cc" stroke-width="1.5"/>
+    <polygon points="34,46 36,20 55,36" fill="#f0701a"/><polygon points="86,46 84,20 65,36" fill="#f0701a"/><polygon points="38,38 38,27 47,34" fill="#ffb3c1"/><polygon points="82,38 82,27 73,34" fill="#ffb3c1"/>
+    <ellipse cx="60" cy="58" rx="29" ry="26" fill="url(#a${u})"/>
+    <path d="M32 62 Q42 80 60 78 Q78 80 88 62 Q76 68 60 66 Q44 68 32 62Z" fill="#fff"/>
+    <ellipse cx="60" cy="62" rx="4.5" ry="3.2" fill="#2b2f42"/><path d="M60 65V69M54 70Q60 74 66 70" stroke="#2b2f42" fill="none" stroke-width="1.8" stroke-linecap="round"/>
+    ${eye(49,52,5)}${eye(71,52,5)}${chk(40,64,4)}${chk(80,64,4)}
+    <circle cx="60" cy="58" r="38" fill="#bfe9ff" opacity=".22" stroke="#e8f6ff" stroke-width="3"/>
+    <path d="M34 40 Q44 26 62 24" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".75"/><circle cx="90" cy="40" r="3" fill="#fff" opacity=".7"/>`),
+  // 4 Chobotnice DJ se sluchátky
+  u=>S(`<defs><radialGradient id="a${u}" cx=".4" cy=".25" r=".85"><stop offset="0" stop-color="#d9a8ff"/><stop offset="1" stop-color="#7c3fd0"/></radialGradient></defs>
+    <g fill="none" stroke="#8e44d6" stroke-width="10" stroke-linecap="round">
+      <path class="lg" d="M42 100 Q20 108 24 124 Q27 132 36 128"/><path class="lg b" d="M52 104 Q44 124 50 132"/><path class="lg" d="M68 104 Q76 124 70 132"/><path class="lg b" d="M78 100 Q100 108 96 124 Q93 132 84 128"/></g>
+    <g fill="#f3d6ff" opacity=".8"><circle cx="26" cy="118" r="2"/><circle cx="31" cy="127" r="2"/><circle cx="49" cy="122" r="2"/><circle cx="70" cy="122" r="2"/><circle cx="94" cy="118" r="2"/><circle cx="89" cy="127" r="2"/></g>
+    <ellipse cx="60" cy="62" rx="36" ry="40" fill="url(#a${u})" stroke="#6a32b8" stroke-width="2"/>
+    <ellipse cx="44" cy="44" rx="10" ry="5" fill="#fff" opacity=".45" transform="rotate(-30 44 44)"/>
+    <circle cx="70" cy="40" r="4" fill="#6a32b8" opacity=".4"/><circle cx="80" cy="50" r="2.5" fill="#6a32b8" opacity=".4"/><circle cx="38" cy="82" r="3" fill="#6a32b8" opacity=".4"/>
+    ${eye(47,66,8,"#3a1a6e")}${eye(73,66,8,"#3a1a6e")}${chk(37,80)}${chk(83,80)}
+    <path d="M52 82 Q60 91 68 82" fill="none" stroke="#3a1a6e" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M24 66 Q24 18 60 18 Q96 18 96 66" fill="none" stroke="#2b2f42" stroke-width="7" stroke-linecap="round"/>
+    <rect x="15" y="54" width="15" height="28" rx="7" fill="#ff3d71" stroke="#b8174a" stroke-width="2"/><rect x="90" y="54" width="15" height="28" rx="7" fill="#ff3d71" stroke="#b8174a" stroke-width="2"/>
+    <rect x="19" y="60" width="7" height="16" rx="3.5" fill="#ff8aa8"/><rect x="94" y="60" width="7" height="16" rx="3.5" fill="#ff8aa8"/>
+    <text class="pl" x="100" y="30" font-size="17" fill="#5b5bf0">♪</text><text class="pl" x="4" y="38" font-size="15" fill="#ff3d71" style="animation-delay:-.4s">♫</text>`),
+  // 5 Kaktus Pepa s brýlemi, kytičkou a květináčem místo nohou
+  u=>S(`<defs><linearGradient id="a${u}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2a9d4a"/><stop offset=".45" stop-color="#6fe07a"/><stop offset="1" stop-color="#2a9d4a"/></linearGradient><linearGradient id="b${u}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c25a30"/><stop offset=".5" stop-color="#ee8a58"/><stop offset="1" stop-color="#c25a30"/></linearGradient></defs>
+    ${lg(46,126,8,12,"#6b3a20")}${lg(66,126,8,12,"#6b3a20",1)}
+    <rect x="22" y="58" width="14" height="36" rx="7" fill="url(#a${u})" stroke="#1f7a38" stroke-width="1.5"/><rect x="22" y="82" width="34" height="13" rx="6.5" fill="url(#a${u})" stroke="#1f7a38" stroke-width="1.5"/>
+    <rect x="84" y="44" width="14" height="36" rx="7" fill="url(#a${u})" stroke="#1f7a38" stroke-width="1.5"/><rect x="64" y="68" width="34" height="13" rx="6.5" fill="url(#a${u})" stroke="#1f7a38" stroke-width="1.5"/>
+    <rect x="44" y="34" width="32" height="76" rx="16" fill="url(#a${u})" stroke="#1f7a38" stroke-width="1.5"/>
+    <path d="M52 42V104M60 38V108M68 42V104" stroke="#1f7a38" stroke-width="1.5" opacity=".35" fill="none"/>
+    <g stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".9"><path d="M41 52l-4-2M41 70l-4 1M41 90l-4 2M79 52l4-2M79 90l4 2M26 64l-4-2M94 52l4-2M94 70l4 1M26 70l-4 1"/></g>
+    <g><circle cx="60" cy="24" r="6" fill="#ff6f91"/><circle cx="68" cy="30" r="6" fill="#ff6f91"/><circle cx="52" cy="30" r="6" fill="#ff6f91"/><circle cx="65" cy="38" r="0" fill="#ff6f91"/><circle cx="60" cy="31" r="5" fill="#ffd23f" stroke="#e8a317"/></g>
+    <rect x="46" y="56" width="12" height="10" rx="4" fill="#12131c"/><rect x="62" y="56" width="12" height="10" rx="4" fill="#12131c"/><path d="M58 60H62" stroke="#12131c" stroke-width="2"/><path d="M48 58l4 0M64 58l4 0" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".8"/>
+    <path d="M52 76 Q60 84 68 76" fill="none" stroke="#12131c" stroke-width="2.5" stroke-linecap="round"/>${chk(46,74,4)}${chk(74,74,4)}
+    <rect x="32" y="102" width="56" height="10" rx="3" fill="url(#b${u})" stroke="#9a4422" stroke-width="1.5"/><path d="M38 112 L82 112 L76 128 Q60 132 44 128Z" fill="url(#b${u})" stroke="#9a4422" stroke-width="1.5"/>
+    <circle cx="60" cy="120" r="3" fill="#ffd23f"/>`,138),
+  // 6 Tučňák čaroděj
+  u=>S(`<defs><linearGradient id="a${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b4a7a"/><stop offset="1" stop-color="#1c2340"/></linearGradient><linearGradient id="b${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6a4cff"/><stop offset="1" stop-color="#3a1fa8"/></linearGradient></defs>
+    <ellipse class="lg" cx="48" cy="130" rx="10" ry="5" fill="#ffa21f"/><ellipse class="lg b" cx="72" cy="130" rx="10" ry="5" fill="#ffa21f"/>
+    <line x1="94" y1="88" x2="108" y2="58" stroke="#8b5a2b" stroke-width="3.5" stroke-linecap="round"/>
+    <polygon class="pl" points="${star(108,52,10,4.5)}" fill="#ffe066" stroke="#e8a317" stroke-width="1.3" stroke-linejoin="round"/>
+    <ellipse cx="60" cy="92" rx="29" ry="37" fill="url(#a${u})"/><ellipse cx="60" cy="98" rx="19" ry="29" fill="#f6f8ff"/>
+    <circle cx="60" cy="64" r="25" fill="url(#a${u})"/>
+    <ellipse cx="50" cy="64" rx="10" ry="11" fill="#fff"/><ellipse cx="70" cy="64" rx="10" ry="11" fill="#fff"/>
+    ${eye(50,64,5,"#1b1d2a")}${eye(70,64,5,"#1b1d2a")}
+    <polygon points="53,72 67,72 60,83" fill="#ffa21f" stroke="#d9770a" stroke-width="1.2" stroke-linejoin="round"/>${chk(42,74,4)}${chk(78,74,4)}
+    <ellipse class="lg" cx="29" cy="94" rx="6" ry="15" fill="#1c2340" transform="rotate(18 29 94)"/><ellipse class="lg b" cx="91" cy="92" rx="6" ry="14" fill="#1c2340" transform="rotate(-30 91 92)"/>
+    <polygon points="36,46 60,4 84,46" fill="url(#b${u})" stroke="#2c1585" stroke-width="1.5" stroke-linejoin="round"/>
+    <ellipse cx="60" cy="46" rx="29" ry="7" fill="#3a1fa8" stroke="#2c1585" stroke-width="1.5"/><path d="M40 40Q60 48 80 40" fill="none" stroke="#ffd23f" stroke-width="3"/>
+    <polygon points="${star(56,26,5,2.2)}" fill="#ffe066"/><polygon points="${star(66,34,3.6,1.6)}" fill="#ffe066"/><circle cx="60" cy="6" r="3.5" fill="#ffe066"/>`),
+  // 7 Žabák se školním batohem
+  u=>S(`<defs><linearGradient id="a${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9af07a"/><stop offset="1" stop-color="#37a63a"/></linearGradient></defs>
+    <rect x="70" y="66" width="36" height="50" rx="11" fill="#ff5a5f" stroke="#b8323a" stroke-width="2"/><rect x="76" y="92" width="24" height="16" rx="5" fill="#ff8a8e" stroke="#b8323a" stroke-width="1.5"/><rect x="84" y="62" width="8" height="8" rx="3" fill="#b8323a"/>
+    <ellipse cx="58" cy="96" rx="27" ry="29" fill="url(#a${u})" stroke="#2c8a30" stroke-width="2"/><ellipse cx="56" cy="104" rx="16" ry="18" fill="#eaffd2"/>
+    <ellipse class="lg" cx="38" cy="130" rx="14" ry="6" fill="#37a63a" stroke="#2c8a30" stroke-width="1.5"/><ellipse class="lg b" cx="76" cy="130" rx="14" ry="6" fill="#37a63a" stroke="#2c8a30" stroke-width="1.5"/>
+    <ellipse cx="56" cy="64" rx="31" ry="22" fill="url(#a${u})" stroke="#2c8a30" stroke-width="2"/>
+    <circle cx="40" cy="44" r="12" fill="url(#a${u})" stroke="#2c8a30" stroke-width="2"/><circle cx="72" cy="44" r="12" fill="url(#a${u})" stroke="#2c8a30" stroke-width="2"/>
+    ${eye(40,44,8,"#12131c")}${eye(72,44,8,"#12131c")}
+    <circle cx="50" cy="62" r="1.8" fill="#2c8a30"/><circle cx="62" cy="62" r="1.8" fill="#2c8a30"/>
+    <path d="M36 70 Q56 88 78 70" fill="none" stroke="#1d5a20" stroke-width="2.8" stroke-linecap="round"/>${chk(34,72,4)}${chk(80,72,4)}
+    <g class="lg"><rect x="20" y="90" width="26" height="20" rx="3" fill="#5b5bf0" stroke="#2c2cb8" stroke-width="2"/><rect x="23" y="93" width="20" height="14" rx="2" fill="#fff"/><path d="M26 97H40M26 101H38M26 105H34" stroke="#5b5bf0" stroke-width="1.6" stroke-linecap="round"/></g>
+    <circle cx="48" cy="102" r="5" fill="#37a63a" stroke="#2c8a30" stroke-width="1.5"/>`),
+  // 8 Duch Bubu v párty kloboučku
+  u=>S(`<defs><linearGradient id="a${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#c9d4ff"/></linearGradient></defs>
+    <ellipse cx="60" cy="134" rx="22" ry="4" fill="#000" opacity=".12"/>
+    <ellipse class="wag" cx="24" cy="88" rx="7" ry="12" fill="#f2f5ff" stroke="#aeb9ee" stroke-width="1.5" transform="rotate(25 24 88)"/><ellipse class="wag" cx="96" cy="88" rx="7" ry="12" fill="#f2f5ff" stroke="#aeb9ee" stroke-width="1.5" transform="rotate(-25 96 88)"/>
+    <path d="M30 120V62Q30 24 60 24Q90 24 90 62V120Q82 111 75 120Q67 111 60 120Q52 111 45 120Q38 111 30 120Z" fill="url(#a${u})" stroke="#aeb9ee" stroke-width="2"/>
+    <ellipse cx="44" cy="46" rx="8" ry="4" fill="#fff" opacity=".8" transform="rotate(-35 44 46)"/>
+    <g class="bl"><ellipse cx="48" cy="64" rx="5" ry="8" fill="#1b1d2a"/><ellipse cx="72" cy="64" rx="5" ry="8" fill="#1b1d2a"/><circle cx="49.5" cy="61" r="2" fill="#fff"/><circle cx="73.5" cy="61" r="2" fill="#fff"/></g>
+    ${chk(40,76)}${chk(80,76)}
+    <ellipse cx="60" cy="80" rx="5" ry="6" fill="#1b1d2a"/><ellipse cx="60" cy="83" rx="3" ry="2.5" fill="#ff6f91"/>
+    <polygon points="62,96 78,92 78,104 62,100 46,104 46,92" fill="#8a4fd8" stroke="#5a2a8a" stroke-width="1.2" stroke-linejoin="round"/><circle cx="62" cy="98" r="3.5" fill="#b98af0"/>
+    <polygon points="46,28 60,0 74,28" fill="#ff6f91" stroke="#c23a63" stroke-width="1.5" stroke-linejoin="round"/><path d="M52 18H68M49 24H71" stroke="#fff" stroke-width="2.5" opacity=".85"/><ellipse cx="60" cy="28" rx="16" ry="4" fill="#ff9fb8" stroke="#c23a63" stroke-width="1.2"/><circle class="pl" cx="60" cy="0" r="4" fill="#ffd23f"/>
+    <circle class="pl" cx="14" cy="50" r="3" fill="#ff6f91"/><circle class="pl" cx="106" cy="60" r="3" fill="#5bd1f0" style="animation-delay:-.3s"/><circle class="pl" cx="100" cy="30" r="2.5" fill="#ffd23f" style="animation-delay:-.5s"/><circle class="pl" cx="18" cy="112" r="2.5" fill="#3ecf7b" style="animation-delay:-.2s"/>`,136,22),
+  // 9 Slimák závodník (kreslen směrem doleva, otočen na pravý směr)
+  u=>S(`<defs><linearGradient id="a${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe3a3"/><stop offset="1" stop-color="#f0b34a"/></linearGradient><radialGradient id="b${u}" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="#ff9f6a"/><stop offset="1" stop-color="#d9531e"/></radialGradient></defs>
+    <g transform="translate(120 0) scale(-1 1)">
+    <g stroke="#9ad7ff" stroke-width="3" stroke-linecap="round" opacity=".8"><path d="M118 84H108M120 96H104M118 108H108"/></g>
+    <path d="M12 124Q10 112 22 110L96 112Q112 112 108 124Q108 131 98 131L22 131Q12 131 12 124Z" fill="url(#a${u})" stroke="#c9892a" stroke-width="2"/>
+    <path d="M14 114Q8 82 22 68Q36 60 42 74Q44 94 46 112Z" fill="url(#a${u})" stroke="#c9892a" stroke-width="2"/>
+    <line x1="24" y1="66" x2="18" y2="40" stroke="#c9892a" stroke-width="3" stroke-linecap="round"/><line x1="36" y1="66" x2="40" y2="38" stroke="#c9892a" stroke-width="3" stroke-linecap="round"/>
+    ${eye(18,38,6,"#12131c")}${eye(40,36,6,"#12131c")}
+    <path d="M22 88Q30 96 38 88" fill="none" stroke="#7a4a10" stroke-width="2.5" stroke-linecap="round"/>${chk(18,86,4)}
+    <path d="M12 60Q16 40 34 48L38 62Z" fill="#e63946" stroke="#9a1f2b" stroke-width="1.8" stroke-linejoin="round"/><path d="M18 52Q26 46 34 52" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M14 62H38" stroke="#12131c" stroke-width="3" opacity=".7"/>
+    <circle cx="76" cy="84" r="31" fill="#d9531e" stroke="#9a3410" stroke-width="2"/><circle cx="76" cy="84" r="31" fill="url(#b${u})"/>
+    <circle cx="78" cy="84" r="23" fill="#ffa05c" stroke="#9a3410" stroke-width="1.5"/><circle cx="80" cy="84" r="15" fill="#e8662b" stroke="#9a3410" stroke-width="1.5"/><circle cx="82" cy="84" r="7" fill="#ffc08a" stroke="#9a3410" stroke-width="1.5"/>
+    <path d="M56 66Q64 54 78 54" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".6"/>
+    <circle cx="94" cy="104" r="9" fill="#fff" stroke="#9a3410" stroke-width="1.5"/><text x="94" y="108.5" font-size="12" font-weight="800" text-anchor="middle" fill="#e63946" transform="scale(-1 1) translate(-188 0)">7</text>
+    </g>`,135,34),
+  // 10 Dráček s křidélky
+  u=>S(`<defs><radialGradient id="a${u}" cx=".4" cy=".3" r=".85"><stop offset="0" stop-color="#ff8f6a"/><stop offset="1" stop-color="#d62839"/></radialGradient></defs>
+    <g class="wag"><path d="M80 84 Q112 40 118 72 Q108 66 108 80 Q98 74 96 90Z" fill="#ffb703" stroke="#c98200" stroke-width="1.5" stroke-linejoin="round"/><path d="M84 84 L106 62M88 88 L108 78" stroke="#c98200" stroke-width="1.3" fill="none"/></g>
+    <path d="M84 112 Q106 114 108 130 L112 120 L100 108Z" fill="#d62839" stroke="#9a1424" stroke-width="1.5" stroke-linejoin="round"/>
+    <ellipse cx="58" cy="94" rx="28" ry="30" fill="url(#a${u})" stroke="#9a1424" stroke-width="2"/>
+    <ellipse cx="58" cy="102" rx="16" ry="22" fill="#ffe3a3"/><path d="M45 92H71M44 100H72M45 108H71M48 116H68" stroke="#e8b95c" stroke-width="1.6" stroke-linecap="round"/>
+    <ellipse class="lg" cx="46" cy="128" rx="11" ry="6" fill="#d62839" stroke="#9a1424" stroke-width="1.5"/><ellipse class="lg b" cx="72" cy="128" rx="11" ry="6" fill="#d62839" stroke="#9a1424" stroke-width="1.5"/>
+    <path d="M42 130v3M46 131v3M50 130v3M68 130v3M72 131v3M76 130v3" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>
+    <ellipse class="lg" cx="32" cy="98" rx="5" ry="10" fill="#d62839" stroke="#9a1424" stroke-width="1.3"/><ellipse class="lg b" cx="84" cy="98" rx="5" ry="10" fill="#d62839" stroke="#9a1424" stroke-width="1.3"/>
+    <polygon points="44,32 38,12 54,26" fill="#ffe3a3" stroke="#c98200" stroke-width="1.3" stroke-linejoin="round"/><polygon points="72,32 78,12 62,26" fill="#ffe3a3" stroke="#c98200" stroke-width="1.3" stroke-linejoin="round"/>
+    <polygon points="52,28 58,16 64,28" fill="#ffb703" stroke="#c98200" stroke-width="1.2" stroke-linejoin="round"/>
+    <ellipse cx="58" cy="54" rx="29" ry="24" fill="url(#a${u})" stroke="#9a1424" stroke-width="2"/>
+    <ellipse cx="62" cy="64" rx="19" ry="12" fill="#ff9f86"/><circle cx="55" cy="63" r="1.8" fill="#9a1424"/><circle cx="68" cy="63" r="1.8" fill="#9a1424"/>
+    ${eye(46,48,6,"#2a9d4a")}${eye(68,48,6,"#2a9d4a")}
+    <path d="M50 71Q62 78 74 70" fill="none" stroke="#6a0f1c" stroke-width="2.4" stroke-linecap="round"/><polygon points="58,74.5 61,74.5 59.5,78" fill="#fff"/>${chk(40,62,4)}
+    <path class="pl" d="M88 64Q100 56 98 68Q104 66 100 76Q94 72 88 70Z" fill="#ffb703" stroke="#ff6b1a" stroke-width="1.5" stroke-linejoin="round"/>`),
+  // 11 Hvězdička Zlatka s absolventskou čepicí
+  u=>S(`<defs><radialGradient id="a${u}" cx=".4" cy=".3" r=".8"><stop offset="0" stop-color="#fff7a8"/><stop offset="1" stop-color="#ffb703"/></radialGradient></defs>
+    ${lg(46,108,9,22,"#e89a00")}${lg(65,108,9,22,"#e89a00",1)}<ellipse cx="50" cy="131" rx="9" ry="4" fill="#c97a00"/><ellipse cx="70" cy="131" rx="9" ry="4" fill="#c97a00"/>
+    <polygon points="${star(60,72,50,24)}" fill="url(#a${u})" stroke="#e89a00" stroke-width="8" stroke-linejoin="round"/>
+    <polygon points="${star(60,72,50,24)}" fill="url(#a${u})"/>
+    <path d="M40 58L56 36" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".6"/>
+    ${eye(50,74,6,"#4a2a00")}${eye(70,74,6,"#4a2a00")}${chk(41,84,4.5)}${chk(79,84,4.5)}
+    <path d="M52 85Q60 96 68 85Z" fill="#7a1f2a" stroke="#4a1019" stroke-width="1.5" stroke-linejoin="round"/><path d="M55 90Q60 94 65 90" fill="#ff8aa8"/>
+    <polygon points="36,26 60,14 84,26 60,38" fill="#1b1d2a" stroke="#000" stroke-width="1.2" stroke-linejoin="round"/><path d="M46 31V40Q60 46 74 40V31" fill="#2b2f42"/>
+    <path d="M84 26V42" stroke="#ffd23f" stroke-width="2"/><circle cx="84" cy="44" r="3" fill="#ffd23f"/>
+    <polygon class="pl" points="${star(14,34,6,2)}" fill="#fff6a0"/><polygon class="pl" points="${star(106,50,5,1.8)}" fill="#fff6a0" style="animation-delay:-.4s"/><polygon class="pl" points="${star(102,100,4,1.5)}" fill="#fff6a0" style="animation-delay:-.2s"/>`,135,28)
+  ];
+  const sz=[96,104,100,112,104,96,98,100,90,108,100,100];
+  const r=$("run");
+  C.forEach((f,n)=>{
+    const l=n%2,d=document.createElement("div");
+    d.className="rn"+(l?" l":"");
+    d.style.cssText=`bottom:${1+(n*7)%26}vh;width:${sz[n]}px;animation-duration:${16+(n*5)%12}s;animation-delay:-${(n*3.7)%16}s`;
+    d.innerHTML=`<b style="display:block;${l?"transform:scaleX(-1)":""}"><span style="animation-delay:-${(n*.13).toFixed(2)}s">${f(n)}</span></b>`;
+    r.appendChild(d);
+  });
+  const prev=show;
+  show=function(id){$("run").style.display=id==="home"?"":"none";prev(id)};
+})();
+</script>
+</body>
+</html>
